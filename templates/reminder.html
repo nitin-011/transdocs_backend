@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder App</title>
+    <script>
+        async function addReminder() {
+            const title = document.getElementById('title').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const toggle = document.getElementById('toggle').checked;
+
+            const response = await fetch('/reminder/add_reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, date, time, toggle })
+            });
+
+            const data = await response.json();
+            alert(data.message);
+        }
+    </script>
+</head>
+<body>
+    <h1>Reminder App</h1>
+    <button onclick="document.getElementById('popup').style.display = 'block'">Add Reminder</button>
+
+    <div id="popup" style="display: none;">
+        <h2>Add Reminder</h2>
+        <label for="title">Title:</label>
+        <input type="text" id="title" required><br>
+
+        <label for="date">Date:</label>
+        <input type="date" id="date" required><br>
+
+        <label for="time">Time:</label>
+        <input type="time" id="time" required><br>
+
+        <label for="toggle">Enable Reminder:</label>
+        <input type="checkbox" id="toggle"><br>
+
+        <button onclick="addReminder()">Submit</button>
+        <button onclick="document.getElementById('popup').style.display = 'none'">Close</button>
+    </div>
+</body>
+</html>

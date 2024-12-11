@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TransformoDocs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<style>
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -250px; /* Hidden initially */
+        width: 250px;
+        height: 100%;
+        background-color: rgba(52, 58, 64, 0.6); /* Translucent background */
+        color: white;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+        transition: left 0.3s ease;
+        z-index: 1050;
+        backdrop-filter: blur(5px); /* Additional blur effect */
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar .close-btn {
+        font-size: 24px;
+        color: white;
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        cursor: pointer;
+    }
+    
+    .sidebar .nav-item a {
+        color: white;
+        text-decoration: none;
+        padding: 10px 15px;
+        display: block;
+        transition: background-color 0.3s ease;
+    }
+    
+    .sidebar .nav-item a:hover {
+        background-color: rgba(73, 80, 87, 0.7);
+        text-decoration: none;
+    }
+    
+    .sidebar .nav-item {
+        padding-top: 15px;
+    }
+    
+    .hamburger {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        font-size: 28px;
+        cursor: pointer;
+        color: #333;
+        z-index: 1100;
+        transition: transform 0.3s ease;
+        display: block; /* Ensure it's initially visible */
+    }
+    
+    
+
+    /* Body overlay when sidebar is open */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1049;
+        display: none;
+    }
+
+    .overlay.active {
+        display: block;
+    }
+    .nav-item{
+        padding-top:30px;
+    }
+</style>
+<body>
+
+    <div class="hamburger">
+        <i class="fas fa-bars"></i>
+    </div>
+    
+    <div class="sidebar" style="padding-top: 50px;">
+        <span class="close-btn">&times;</span>
+        <nav class="nav flex-column">
+            <div class="nav-item">
+                <a href="#profile"><i class="fas fa-user me-2"></i>Profile</a>
+            </div>
+            <div class="nav-item">
+                <a href="#dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
+            </div>
+            <div class="nav-item">
+                <a href="reminder.html"><i class="fas fa-bell me-2"></i>Reminders</a>
+            </div>
+            <div class="nav-item">
+                <a href="#audit-log"><i class="fas fa-clipboard-list me-2"></i>Audit Log</a>
+            </div>
+            <div class="nav-item">
+                <a href="recyclebin.html"><i class="fas fa-trash-restore me-2"></i>Recycle Bin</a>
+            </div>
+        </nav>
+    </div>
+    
+
+    <!-- Body Overlay -->
+    <div class="overlay"></div>
+
+    <div class="container mt-5">
+        <div class="logo-container">
+            <svg class="logo" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <circle cx="50" cy="40" r="30" fill="url(#logoGradient)" class="logo-circle" />
+                <path d="M35,40 L45,30 L55,40 L65,30" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="logo-lines" />
+                <path d="M35,50 L45,40 L55,50 L65,40" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="logo-lines" />
+
+                <text x="95" y="32" font-family="Poppins, sans-serif" font-size="24" font-weight="700" fill="#333" class="logo-text">Transformo</text>
+                <text x="95" y="58" font-family="Poppins, sans-serif" font-size="24" font-weight="700" fill="#4CAF50" class="logo-text">Docs</text>
+            </svg>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                {% for folder in current_path.split('/') %}
+                {% if folder %}
+                <li class="breadcrumb-item"><a href="{{ url_for('index', path='/'.join(current_path.split('/')[:loop.index])) }}">{{ folder }}</a></li>
+                {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+        <div id="search-container">
+            <div class="mb-3">
+                <div class="input-group">
+                    <input type="text" id="search" class="form-control" placeholder="Search files...">
+                    <select id="search-type" class="form-select">
+                        <option value="name">Search by Name</option>
+                        <option value="content">Search by Content</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button id="create-folder-btn" class="btn btn-primary"><i class="fas fa-folder-plus"></i> Create Folder</button>
+            <button id="upload-btn" class="btn btn-success"><i class="fas fa-upload"></i> Upload File</button>
+            <button id="download-btn" class="btn btn-info" disabled><i class="fas fa-download"></i> Download</button>
+            <button id="download-converted-btn" class="btn btn-secondary" disabled><i class="fas fa-file-alt"></i> Download Converted</button>
+            <button id="copy-btn" class="btn btn-secondary" disabled><i class="fas fa-copy"></i> Copy</button>
+            <button id="cut-btn" class="btn btn-warning" disabled><i class="fas fa-cut"></i> Cut</button>
+            <button id="paste-btn" class="btn btn-light" disabled><i class="fas fa-paste"></i> Paste</button>
+            <button id="view-btn" class="btn btn-primary" disabled><i class="fas fa-eye"></i> View</button>
+
+        </div>
+
+        <form id="upload-form" class="mb-3" style="display: none;">
+            <div class="input-group">
+                <input type="file" class="form-control" id="file-input" name="file" multiple>
+                <button class="btn btn-primary" type="submit">Upload</button>
+            </div>
+        </form>
+
+        <ul id="file-list" class="list-group">
+        </ul>
+       
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+
+        $(document).ready(function () {
+            const hamburger = $('.hamburger');
+            const sidebar = $('.sidebar');
+            const closeBtn = $('.close-btn');
+        
+            // Open sidebar when mouse moves to the extreme left
+            $(document).on('mousemove', function (e) {
+                if (e.pageX <= 10) { // Detect if mouse is at the extreme left
+                    sidebar.addClass('active');
+                    hamburger.hide(); // Hide the hamburger icon
+                }
+            });
+        
+            // Close sidebar when mouse leaves the sidebar
+            sidebar.on('mouseleave', function () {
+                sidebar.removeClass('active');
+                hamburger.show(); // Show the hamburger icon
+            });
+        
+            // Close sidebar when clicking the close button
+            closeBtn.on('click', function () {
+                sidebar.removeClass('active');
+                hamburger.show(); // Show the hamburger icon
+            });
+        });
+
+
+            $(document).ready(function () {
+                var currentPath = '{{ current_path }}';
+
+                function updateButtonStates() {
+                    var checkedItems = $('input[type="checkbox"]:checked');
+                    var checkedFiles = checkedItems.filter('[data-type="file"]');
+                    $('#download-btn, #delete-btn, #copy-btn, #cut-btn, #view-btn').prop('disabled', checkedItems.length === 0);
+                    $('#download-converted-btn').prop('disabled', checkedFiles.length === 0);
+                    $('#paste-btn').prop('disabled', !localStorage.getItem('clipboard'));
+                }
+
+
+
+                function updateBreadcrumb(path) {
+                    var parts = path.split('/').filter(Boolean);
+                    var $breadcrumb = $('.breadcrumb');
+                    $breadcrumb.empty();
+                    $breadcrumb.append('<li class="breadcrumb-item"><a href="#" data-path="">Home</a></li>');
+                    var currentPath = '';
+                    parts.forEach(function (part) {
+                        if (part) {
+                            currentPath += part + '/';
+                            $breadcrumb.append(`<li class="breadcrumb-item"><a href="#" data-path="${currentPath}">${part}</a></li>`);
+                        }
+                    });
+                }
+                $(document).on('click', '.folder-link', function (e) {
+                    e.preventDefault();
+                    var path = $(this).data('path');
+                    refreshFileList(path);
+                });
+
+                $(document).on('click', '.breadcrumb-item a', function (e) {
+                    e.preventDefault();
+                    var path = $(this).data('path');
+                    refreshFileList(path);
+                });
+
+                function createListItem(item, isFolder) {
+                    var icon = isFolder ? 'fa-folder' : 'fa-file';
+                    var dataType = isFolder ? 'folder' : 'file';
+                    var itemName = item.split('/').pop();
+                    var fullPath = currentPath ? currentPath + '/' + itemName : itemName;
+
+                    return `
+            <li class="list-group-item">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" data-name="${item.name}" data-type="${item.type}">
+                    <label class="form-check-label">
+                        <i class="fas ${icon} me-2"></i>
+                        ${item.type === 'folder' ?
+                            `<a href="#" class="folder-link" data-path="${fullPath}">${item.name}</a>` :
+                            item.name}
+                    </label>
+                </div>
+            </li>
+        `;
+                }
+
+                $('body').on('change', 'input[type="checkbox"]', updateButtonStates);
+
+                $('body').on('click', '.folder-link', function (e) {
+                    e.preventDefault();
+                    var path = $(this).data('path');
+                    refreshFileList(path);
+                });
+
+                $('body').on('click', '.breadcrumb-item a', function (e) {
+                    e.preventDefault();
+                    var path = $(this).data('path');
+                    refreshFileList(path);
+                });
+
+                $('#create-folder-btn').click(function () {
+                    var folderName = prompt("Enter folder name:");
+                    if (folderName) {
+                        $.ajax({
+                            url: '/create_folder',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify({
+                                folder_name: folderName,
+                                parent_path: currentPath
+                            }),
+                            success: function (response) {
+                                alert(response.message);
+                                refreshFileList(currentPath);
+                            },
+                            error: function (xhr) {
+                                alert('Error creating folder: ' + xhr.responseJSON.error);
+                            }
+                        });
+                    }
+                });
+
+                $('#upload-btn').click(function () {
+                    $('#upload-form').toggle();
+                });
+
+                $('#upload-form').submit(function (e) {
+                    e.preventDefault();
+                    var formData = new FormData(this);
+                    formData.append('parent_path', currentPath);
+                    $.ajax({
+                        url: '/upload',
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function (response) {
+                            alert(response.message);
+                            refreshFileList(currentPath);
+                        },
+                        error: function (xhr) {
+                            alert('Error uploading file(s): ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error'));
+                        }
+                    });
+                });
+
+                function refreshFileList(path) {
+                    $.ajax({
+                        url: '/list_files',
+                        type: 'GET',
+                        data: { path: path },
+                        success: function (data) {
+                            $('#file-list').html(data);
+                            currentPath = path;
+                            updateBreadcrumb(path);
+                            updateButtonStates();
+                            bindFolderLinkEvents();
+                        },
+                        error: function (xhr) {
+                            alert('Error refreshing file list: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error'));
+                        }
+                    });
+                }
+
+                $('#download-btn').click(function () {
+                    $('input[type="checkbox"]:checked').each(function () {
+                        var item = $(this).data('name');
+                        window.open('/download/' + currentPath + '/' + item, '_blank');
+                    });
+                });
+
+                $('#download-converted-btn').click(function () {
+                    $('input[type="checkbox"][data-type="file"]:checked').each(function () {
+                        var item = $(this).data('name');
+                        window.open('/download_converted/' + currentPath + '/' + item, '_blank');
+                    });
+                });
+
+                $('#delete-btn').click(function () {
+                    if (confirm('Are you sure you want to delete the selected item(s)?')) {
+                        var items = $('input[type="checkbox"]:checked').map(function () {
+                            return $(this).data('name');
+                        }).get();
+                        $.ajax({
+                            url: '/delete',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify({
+                                items: items,
+                                parent_path: currentPath
+                            }),
+                            success: function (response) {
+                                alert(response.message);
+                                refreshFileList(currentPath);
+                            },
+                            error: function (xhr) {
+                                alert('Error deleting item(s): ' + xhr.responseJSON.error);
+                            }
+                        });
+                    }
+                });
+
+                $('#copy-btn, #cut-btn').click(function () {
+                    var action = $(this).attr('id').split('-')[0];
+                    var items = $('input[type="checkbox"]:checked').map(function () {
+                        return {
+                            name: $(this).data('name'),
+                            type: $(this).data('type')
+                        };
+                    }).get();
+                    localStorage.setItem('clipboard', JSON.stringify({
+                        action: action,
+                        items: items,
+                        sourcePath: currentPath
+                    }));
+                    updateButtonStates();
+                });
+
+                $('#paste-btn').click(function () {
+                    var clipboard = JSON.parse(localStorage.getItem('clipboard'));
+                    if (clipboard) {
+                        $.ajax({
+                            url: '/paste',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify({
+                                clipboard: clipboard,
+                                destination_path: currentPath
+                            }),
+                            success: function (response) {
+                                alert(response.message);
+                                localStorage.removeItem('clipboard');
+                                refreshFileList(currentPath);
+                            },
+                            error: function (xhr) {
+                                alert('Error pasting item(s): ' + xhr.responseJSON.error);
+                            }
+                        });
+                    }
+                });
+              
+                function performSearch() {
+                    var query = $('#search').val().toLowerCase();
+                    var searchType = $('#search-type').val();
+
+                    if (query.trim() === '') {
+                        refreshFileList(currentPath);
+                        return;
+                    }
+
+                    $.ajax({
+                        url: '/search',
+                        type: 'GET',
+                        data: {
+                            query: query,
+                            type: searchType,
+                            current_path: currentPath
+                        },
+                        success: function (results) {
+                            $('#file-list').empty();
+                            results.forEach(function (item) {
+                                var icon = item.type === 'folder' ? 'fa-folder' : 'fa-file';
+                                var listItem = `
+                        <li class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" data-name="${item.name}" data-type="${item.type}">
+                                <label class="form-check-label">
+                                    <i class="fas ${icon} me-2"></i>
+                                    ${item.type === 'folder' ?
+                                        `<a href="#" class="folder-link" data-path="${item.path}">${item.name}</a>` :
+                                        item.name}
+                                </label>
+                            </div>
+                        </li>
+                    `;
+                                $('#file-list').append(listItem);
+                            });
+                            updateButtonStates();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Search error:", error);
+                            alert("An error occurred while searching. Please try again.");
+                        }
+                    });
+                }
+
+
+
+                $('#search').on('input', function () {
+                    performSearch();
+                });
+
+                $('#search-type').on('change', performSearch);
+
+                $(document).on('click', function (event) {
+                    var searchContainer = $('#search-container');
+                    var fileList = $('#file-list');
+
+                    if (!searchContainer.is(event.target) && searchContainer.has(event.target).length === 0 &&
+                        !fileList.is(event.target) && fileList.has(event.target).length === 0) {
+                        resetSearch();
+                    }
+                });
+
+                $('#search-container, #file-list').on('click', function (event) {
+                    event.stopPropagation();
+                });
+
+                $('#file-list').on('change', 'input[type="checkbox"]', function () {
+                    updateButtonStates();
+                });
+                function bindFolderLinkEvents() {
+                    // Unbind any existing folder link event handlers
+                    $('#file-list').off('click', '.folder-link');
+
+                    // Bind new folder link event handlers
+                    $('#file-list').on('click', '.folder-link', function (e) {
+                        e.preventDefault();
+                        var path = $(this).data('path');
+                        refreshFileList(path);
+                    });
+                }
+                function resetSearch() {
+                    $('#search').val('');
+                    refreshFileList(currentPath);
+                }
+                // Initialize
+                refreshFileList('');
+            });
+        var currentPath = '{{ current_path }}';
+
+        class FileViewer {
+            constructor() {
+                this.setupModal();
+                this.setupEventListeners();
+                this.textOverlay = document.getElementById('textOverlay');
+                this.currentImage = null;
+                this.currentPDF = null;
+            }
+
+            setupModal() {
+                if (!document.getElementById('fileViewerModal')) {
+                    const modalHTML = `
+                <div id="fileViewerModal" class="modal-backdrop">
+                    <div class="modal-container">
+                        <div class="modal-header">
+                            <div class="modal-title">File Viewer</div>
+                            <div class="viewer-controls">
+                                <button class="btn btn-outline-primary px-3 py-2 mx-2 viewer-btn toggle-text-btn">
+                                    <i class="fas fa-font me-2"></i> Show Text
+                                </button>
+                                <button class="btn btn-outline-secondary px-3 py-2 viewer-btn copy-text-btn">
+                                    <i class="fas fa-copy me-2"></i> Copy Text
+                                </button>
+                            </div>
+                            <button class="modal-close">&times;</button>
+                        </div>
+                        <div class="modal-content">
+                            <div id="viewerContent" class="viewer-content"></div>
+                            <div id="textOverlay" class="text-overlay"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                }
+
+                if (!document.getElementById('fileViewerStyles')) {
+                    const styles = `
+                <style id="fileViewerStyles">
+                    .modal-backdrop {
+                        display: none;
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.7);
+                        z-index: 9999;
+                        backdrop-filter: blur(5px);
+                    }
+                    .modal-container {
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: white;
+                        padding: 25px;
+                        border-radius: 12px;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                        width: 95%;
+                        height: 95%;
+                        z-index: 10000;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .modal-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding-bottom: 15px;
+                        border-bottom: 1px solid #eee;
+                        margin-bottom: 15px;
+                    }
+                    .modal-title {
+                        font-size: 1.25rem;
+                        font-weight: 600;
+                        color: #2d3748;
+                    }
+                    .viewer-controls {
+                        display: flex;
+                        gap: 12px;
+                        align-items: center;
+                    }
+                    .viewer-btn {
+                        font-size: 0.95rem;
+                        font-weight: 500;
+                        border-radius: 8px;
+                        transition: all 0.2s ease;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                        min-width: 120px;
+                    }
+                    .viewer-btn:hover {
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    }
+                    .modal-content {
+                        flex-grow: 1;
+                        overflow: auto;
+                        position: relative;
+                        border-radius: 8px;
+                        background: #f8f9fa;
+                        padding: 20px;
+                    }
+                     .viewer-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .viewer-content img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+                    .viewer-content iframe {
+                        width: 100%;
+                        height: 100%;
+                        border: none;
+                    }
+                     .text-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 2;
+        transform: translateZ(0); /* Hardware acceleration */
+        will-change: transform; /* Performance optimization */
+    }
+
+    .text-block {
+        position: absolute;
+        background: transparent;
+        color: transparent;
+        cursor: text;
+        user-select: text;
+        padding: 4px;
+        border-radius: 3px;
+        font-family: Arial, sans-serif;
+        white-space: pre-wrap;
+        line-height: 1.4;
+        transition: all 0.3s ease;
+        transform: translateZ(0);
+        will-change: transform, opacity;
+        opacity: 0;
+    }
+                    .text-overlay.active {
+                        pointer-events: auto;
+                    }
+                  
+                    .text-overlay.show-text .text-block {
+        background: rgba(255, 255, 255, 0.98);
+        color: #1a202c;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        opacity: 1;
+    }
+                    .text-block::selection {
+                        background: #90CDF4;
+                        color: #1a202c;
+                    }
+                    .modal-close {
+                        background: none;
+                        border: none;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                        padding: 8px;
+                        color: #666;
+                        transition: all 0.2s ease;
+                        border-radius: 50%;
+                    }
+                    .modal-close:hover {
+                        background: #f3f4f6;
+                        color: #2d3748;
+                    }
+                </styl>
+            `;
+                    document.head.insertAdjacentHTML('beforeend', styles);
+                }
+
+                this.modal = document.getElementById('fileViewerModal');
+                this.viewerContent = document.getElementById('viewerContent');
+            }
+
+            setupEventListeners() {
+                const closeButton = this.modal.querySelector('.modal-close');
+                const toggleTextBtn = this.modal.querySelector('.toggle-text-btn');
+                const copyTextBtn = this.modal.querySelector('.copy-text-btn');
+
+                closeButton.addEventListener('click', () => this.close());
+                toggleTextBtn.addEventListener('click', () => this.toggleTextLayer());
+                copyTextBtn.addEventListener('click', () => this.copyAllText());
+
+                this.modal.addEventListener('click', (e) => {
+                    if (e.target === this.modal) this.close();
+                });
+            }
+
+            async open(filePath) {
+                this.modal.style.display = 'block';
+                await this.loadFile(filePath);
+            }
+
+            close() {
+                if (this.currentImage) {
+                    this.currentImage.style.visibility = 'visible';
+                    this.currentImage = null;
+                }
+                if (this.currentPDF) {
+                    this.currentPDF = null;
+                }
+                this.viewerContent.style.backgroundColor = 'transparent';
+                this.modal.style.display = 'none';
+                this.viewerContent.innerHTML = '';
+                this.textOverlay.innerHTML = '';
+
+                // Reset text layer state
+                this.textOverlay.classList.remove('show-text', 'active');
+                const toggleBtn = this.modal.querySelector('.toggle-text-btn');
+                toggleBtn.innerHTML = '<i class="fas fa-font me-2"></i> Show Text';
+            }
+
+            async loadFile(filePath) {
+                const extension = filePath.split('.').pop().toLowerCase();
+                const fileName = filePath.split('/').pop();
+                this.modal.querySelector('.modal-title').textContent = fileName;
+
+                const toggleBtn = this.modal.querySelector('.toggle-text-btn');
+                const copyBtn = this.modal.querySelector('.copy-text-btn');
+
+                await this.loadVisualContent(filePath, extension);
+
+                if (['png', 'jpg', 'jpeg', 'gif', 'pdf'].includes(extension)) {
+                    await this.loadTextLayer(filePath);
+                    toggleBtn.style.display = 'inline-flex';
+                    copyBtn.style.display = 'inline-flex';
+                } else {
+                    toggleBtn.style.display = 'none';
+                    copyBtn.style.display = 'none';
+                }
+            }
+
+            loadVisualContent(filePath, extension) {
+                return new Promise((resolve) => {
+                    switch (extension) {
+                        case 'pdf':
+                            const pdfFrame = document.createElement('iframe');
+                            pdfFrame.src = `/view_file/${encodeURIComponent(filePath)}`;
+                            Object.assign(pdfFrame.style, {
+                                width: '100%',
+                                height: '100%',
+                                border: 'none'
+                            });
+                            pdfFrame.onload = () => {
+                                this.currentPDF = pdfFrame;
+                                resolve();
+                            };
+                            this.viewerContent.innerHTML = '';
+                            this.viewerContent.appendChild(pdfFrame);
+                            break;
+
+                        case 'png':
+                        case 'jpg':
+                        case 'jpeg':
+                        case 'gif':
+                            const img = document.createElement('img');
+                            img.src = `/view_file/${encodeURIComponent(filePath)}`;
+                            Object.assign(img.style, {
+                                maxWidth: '100%',
+                                maxHeight: 'calc(100vh - 200px)',
+                                objectFit: 'contain'
+                            });
+                            img.onload = () => {
+                                this.currentImage = img;
+                                resolve();
+                            };
+                            this.viewerContent.innerHTML = '';
+                            this.viewerContent.appendChild(img);
+                            break;
+
+                        default:
+                            const iframe = document.createElement('iframe');
+                            iframe.src = `/view_file/${encodeURIComponent(filePath)}`;
+                            Object.assign(iframe.style, {
+                                width: '100%',
+                                height: '100%',
+                                border: 'none'
+                            });
+                            iframe.onload = () => resolve();
+                            this.viewerContent.innerHTML = '';
+                            this.viewerContent.appendChild(iframe);
+                            break;
+                    }
+                });
+            }
+
+            async loadTextLayer(filePath) {
+    try {
+        const response = await fetch(`/extract_text/${encodeURIComponent(filePath)}`);
+        const data = await response.json();
+
+        if (data.text && data.text.length > 0) {
+            this.textOverlay.innerHTML = '';
+            const container = this.currentImage || this.currentPDF;
+
+            if (container) {
+                // Wait for any ongoing animations
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const rect = container.getBoundingClientRect();
+                const viewerRect = this.viewerContent.getBoundingClientRect();
+                
+                // Calculate the actual scale considering container padding
+                const containerPadding = 20; // Padding from your CSS
+                const availableWidth = viewerRect.width - (containerPadding * 2);
+                const availableHeight = viewerRect.height - (containerPadding * 2);
+                
+                const scale = Math.min(
+                    availableWidth / (this.currentImage?.naturalWidth || rect.width),
+                    availableHeight / (this.currentImage?.naturalHeight || rect.height)
+                );
+
+                // Position the text overlay relative to the image
+                Object.assign(this.textOverlay.style, {
+                    position: 'absolute',
+                    width: `${rect.width}px`,
+                    height: `${rect.height}px`,
+                    top: `${rect.top - viewerRect.top}px`,
+                    left: `${rect.left - viewerRect.left}px`
+                });
+
+                // Process text blocks with delay for smooth appearance
+                const processBlocks = () => {
+                    // Group text by lines with improved threshold
+                    const lineThreshold = Math.max(5, rect.height * 0.01);
+                    const lines = {};
+
+                    data.text.forEach(block => {
+                        if (block.text.trim()) {
+                            const yPos = Math.floor(block.bbox.y / lineThreshold) * lineThreshold;
+                            if (!lines[yPos]) lines[yPos] = [];
+                            lines[yPos].push(block);
+                        }
+                    });
+
+                    // Create and position text blocks
+                    Object.entries(lines)
+                        .sort(([a], [b]) => Number(a) - Number(b))
+                        .forEach(([_, blocks], index) => {
+                            blocks.sort((a, b) => a.bbox.x - b.bbox.x);
+
+                            const div = document.createElement('div');
+                            div.className = 'text-block';
+                            
+                            // Join text with proper spacing
+                            div.textContent = blocks
+                                .map(b => b.text.trim())
+                                .join(' ')
+                                .replace(/\s+/g, ' ');
+
+                            const firstBlock = blocks[0];
+                            const lastBlock = blocks[blocks.length - 1];
+                            const width = (lastBlock.bbox.x + lastBlock.bbox.width - firstBlock.bbox.x);
+
+                            Object.assign(div.style, {
+                                left: `${firstBlock.bbox.x * scale}px`,
+                                top: `${firstBlock.bbox.y * scale}px`,
+                                width: `${width * scale}px`,
+                                minHeight: `${firstBlock.bbox.height * scale}px`,
+                                fontSize: `${firstBlock.bbox.height * scale * 0.9}px`,
+                                lineHeight: '1.4',
+                                opacity: '0',
+                                transform: 'translateY(10px)'
+                            });
+
+                            this.textOverlay.appendChild(div);
+
+                            // Animate each block with a slight delay
+                            requestAnimationFrame(() => {
+                                div.style.transition = 'all 0.3s ease';
+                                div.style.transform = 'translateY(0)';
+                                div.style.opacity = '1';
+                            });
+                        });
+                };
+
+                requestAnimationFrame(processBlocks);
+                this.textOverlay.classList.add('active');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading text layer:', error);
+    }
+}
+
+toggleTextLayer() {
+    const isShowingText = !this.textOverlay.classList.contains('show-text');
+    
+    if (this.currentImage) {
+        // Start fade out
+        if (isShowingText) {
+            this.currentImage.style.opacity = '0';
+            setTimeout(() => {
+                this.currentImage.style.visibility = 'hidden';
+                this.viewerContent.style.backgroundColor = '#ffffff';
+            }, 300);
+        } else {
+            this.currentImage.style.visibility = 'visible';
+            setTimeout(() => {
+                this.currentImage.style.opacity = '1';
+                this.viewerContent.style.backgroundColor = 'transparent';
+            }, 50);
+        }
+    }
+
+    // Toggle text layer with proper timing
+    requestAnimationFrame(() => {
+        this.textOverlay.classList.toggle('show-text');
+    });
+
+    const toggleBtn = this.modal.querySelector('.toggle-text-btn');
+    toggleBtn.innerHTML = isShowingText ? 
+        '<i class="fas fa-image me-2"></i> Show Image' : 
+        '<i class="fas fa-font me-2"></i> Show Text';
+}
+
+            copyAllText() {
+                const text = Array.from(this.textOverlay.querySelectorAll('.text-block'))
+                    .map(block => block.textContent)
+                    .join('\n');
+
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        const copyBtn = this.modal.querySelector('.copy-text-btn');
+                        const originalHTML = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '<i class="fas fa-check me-2"></i> Copied!';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalHTML;
+                        }, 2000);
+                    })
+                    .catch(() => alert('Failed to copy text. Please try selecting and copying manually.'));
+            }
+        }
+
+        // Initialize the viewer
+        $(document).ready(function () {
+            window.fileViewer = new FileViewer();
+        });
+       
+
+       
+
+            $('#view-btn').click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const selectedFiles = $('input[type="checkbox"][data-type="file"]:checked');
+
+                if (selectedFiles.length === 1) {
+                    const fileName = selectedFiles.first().data('name');
+                    const filePath = currentPath ? `${currentPath}/${fileName}` : fileName;
+                    const ext = fileName.split('.').pop().toLowerCase();
+                    const viewableTypes = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'xls', 'docx', 'doc'];
+
+                    if (viewableTypes.includes(ext)) {
+                        window.fileViewer.open(filePath);
+                    } else {
+                        alert('This file type is not supported for viewing.');
+                    }
+                } else if (selectedFiles.length === 0) {
+                    alert('Please select a file to view.');
+                } else {
+                    alert('Multiple files cannot be viewed simultaneously.');
+                }
+            });
+       
+    </script>
+</body>
+</html>

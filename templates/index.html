@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TransformoDocs</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .login-container {
+            background: rgba(255, 255, 255, 0.60);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo {
+            width: 300px;
+            height: auto;
+            max-width: 100%;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .additional-options {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .additional-options a {
+            color: #4CAF50;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .additional-options a:hover {
+            color: #45a049;
+        }
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        .shape {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        .language-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        .language-control select {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .language-control select:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+<div class="floating-shapes"></div>
+<div class="language-control">
+    <form id="language-form">
+        <select id="language-dropdown" name="language">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+        </select>
+        <button type="submit">Switch Language</button>
+    </form>
+</div>
+<div id="response"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#language-form').on('submit', function (event) {
+            event.preventDefault(); // Prevent form from reloading the page
+
+            const language = $('#language-dropdown').val(); // Get selected language
+
+            $.ajax({
+                url: '/set_language', // Backend route for language handling
+                method: 'POST',
+                data: { language: language },
+                success: function (response) {
+                    $('#response').html(response.message); // Display response from backend
+                },
+                error: function () {
+                    $('#response').html('Error switching language.');
+                }
+            });
+        });
+    });
+</script>
+    <div class="login-container">
+        <div class="logo-container">
+            <svg class="logo" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <circle cx="50" cy="40" r="30" fill="url(#logoGradient)" class="logo-circle"/>
+                <path d="M35,40 L45,30 L55,40 L65,30" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="logo-lines"/>
+                <path d="M35,50 L45,40 L55,50 L65,40" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="logo-lines"/>
+                
+                <text x="95" y="32" font-family="Poppins, sans-serif" font-size="24" font-weight="700" fill="#333" class="logo-text">Transformo</text>
+                <text x="95" y="58" font-family="Poppins, sans-serif" font-size="24" font-weight="700" fill="#4CAF50" class="logo-text">Docs</text>
+            </svg>
+        </div>
+        <form id="loginForm" action="/home">
+            <input type="text" placeholder="Username" required>
+            <input type="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+        </form>
+        <div class="additional-options">
+            <a href="#" id="forgotPassword">Forgot Password?</a>
+            <a href="#" id="signUp">Sign Up</a>
+        </div>
+    </div>
+
+    <script>
+        // Animation for login container
+        gsap.to('.login-container', {duration: 1, opacity: 1, y: 0, ease: 'power3.out'});
+
+        // Animate logo
+        gsap.from('.logo-circle', {duration: 1, scale: 0, ease: 'back.out(1.7)'});
+        gsap.from('.logo-lines', {duration: 0.7, strokeDashoffset: 100, strokeDasharray: 100, ease: 'power2.out', stagger: 0.2, delay: 0.5});
+       
+        gsap.from('.logo-text', {duration: 1, opacity: 0, y: 10, ease: 'power2.out', stagger: 0.2, delay: 1});
+
+        // Create floating shapes
+        const shapes = 50;
+        const floatingShapes = document.querySelector('.floating-shapes');
+
+        for (let i = 0; i < shapes; i++) {
+            const shape = document.createElement('div');
+            shape.classList.add('shape');
+            shape.style.width = `${Math.random() * 40 + 10}px`;
+            shape.style.height = shape.style.width;
+            shape.style.left = `${Math.random() * 100}%`;
+            shape.style.top = `${Math.random() * 100}%`;
+            floatingShapes.appendChild(shape);
+
+            gsap.to(shape, {
+                x: `random(-100, 100)`,
+                y: `random(-100, 100)`,
+                duration: `random(10, 20)`,
+                repeat: -1,
+                yoyo: true,
+                ease: 'sine.inOut'
+            });
+        }
+
+        // Form submission (prevent default for demo)
+       
+
+        // Language change (for demonstration)
+        document.getElementById('languageSelect').addEventListener('change', function(e) {
+            alert(`Language changed to ${e.target.value}. Implement language change functionality here.`);
+        });
+
+        // Forgot password (for demonstration)
+        document.getElementById('forgotPassword').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('Forgot password functionality would be implemented here.');
+        });
+
+        // Sign up (for demonstration)
+        document.getElementById('signUp').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('Sign up functionality would be implemented here.');
+        });
+    </script>
+</body>
+</html>

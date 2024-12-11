@@ -1,0 +1,59 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+ENV/
+.venv/
+env/
+
+# Flask instance and config files
+instance/
+*.cfg
+*.ini
+
+# Logs
+*.log
+*.out
+*.err
+logs/
+*.sqlite
+
+# Cache and temporary files
+*.cache
+*.tmp
+*.swp
+*.swo
+
+# IDE files
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Python debug files
+*.coverage
+.coverage.*
+
+# Environment variables and secrets
+.env
+.env.*
+
+# Compiled files
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Flask-specific extensions
+migrations/
+
+# Dependency files
+pip-log.txt
+pip-delete-this-directory.txt

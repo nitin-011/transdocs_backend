@@ -1,0 +1,56 @@
+﻿{% for folder in folders %}
+<li class="list-group-item d-flex justify-content-between align-items-center">
+    <div>
+        <input type="checkbox" class="form-check-input me-2" data-type="folder" data-name="{{ folder }}">
+        <i class="fas fa-folder text-warning"></i>
+        <a href="#" class="folder-link" data-path="{{ (current_path + '/' + folder).strip('/') }}">{{ folder }}</a>
+    </div>
+</li>
+{% endfor %}
+{% for file in files %}
+<li class="list-group-item d-flex justify-content-between align-items-center">
+    <div>
+        <input type="checkbox" class="form-check-input me-2" data-type="file" data-name="{{ file.name }}">
+        <i class="fas fa-file text-primary"></i>
+         {{ file.name }} ({{ file.size }}, {{ file.date_uploaded }})
+    </div>
+            <div>
+            <button id="delete-btn" class="btn btn-danger btn-sm delete-btn" data-name="{{ file.name }}">Delete</button>
+            <a href="/view_file/{{ file.name }}" class="btn btn-info btn-sm">View</a>
+        </div>
+</li>
+<script> 
+    $(document).on('click', '.delete-btn', function () {
+        if (confirm('Are you sure you want to delete the selected item(s)?')) {
+            const currentPath = '{{ current_path }}'; // Ensure this is passed correctly
+            const items = $('input[type="checkbox"]:checked').map(function () {
+                return $(this).data('name');
+            }).get();
+
+            if (items.length === 0) {
+                alert('No items selected!');
+                return;
+            }
+
+            $.ajax({
+                url: '/delete_items',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    items: items,
+                    parent_path: currentPath
+                }),
+                success: function (response) {
+                    alert(response.message);
+                    location.reload(); // Reload the page to reflect changes
+                },
+                error: function (xhr) {
+                    alert('Error deleting item(s): ' + xhr.responseJSON.error);
+                }
+            });
+        }
+    });</script
+<script>
+    const currentPath = '{{ current_path }}';
+</script>
+{% endfor %}
